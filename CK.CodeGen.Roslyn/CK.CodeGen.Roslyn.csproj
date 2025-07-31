@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
-    <PackageReference Include="CK.ActivityMonitor.SimpleSender" Version="24.0.1--0003-develop" />
+    <PackageReference Include="CK.ActivityMonitor.SimpleSender" Version="24.0.1--0005-develop" />
     <PackageReference Include="CK.WeakAssemblyNameResolver" Version="0.5.2" />
   </ItemGroup>
   <ItemGroup>
