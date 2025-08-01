@@ -282,7 +282,7 @@ public partial class FunctionDefinition
             if( throwOnError ) throw new InvalidOperationException( $"Error: Unable to parse function or constructor declaration '{declaration}'." );
             return false;
         }
-        Debug.Assert( fDef != null );
+        Throw.DebugAssert( fDef != null );
         if( hasCodeOpener )
         {
             bodyStart = new string( declaration.Slice( declaration.Length - m.Length ).TrimEnd() );

@@ -547,7 +547,7 @@ public partial class NullableTypeTests
         var a = t.CustomAttributes.FirstOrDefault( a => a.AttributeType.Name == "NullableAttribute" && a.AttributeType.Namespace == "System.Runtime.CompilerServices" );
         if( a == null ) return null;
         object? data = a.ConstructorArguments[0].Value;
-        Debug.Assert( data != null );
+        Throw.DebugAssert( data != null );
         if( data is byte b ) return new[] { b };
         return ((IEnumerable<CustomAttributeTypedArgument>)data).Select( a => (byte)a.Value! ).ToArray();
     }
@@ -593,7 +593,7 @@ public partial class NullableTypeTests
         if( f != null ) return (f!.FieldType, f!.GetNullabilityInfo());
 
         var m = GetType()!.GetMethod( name, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic );
-        Debug.Assert( m != null );
+        Throw.DebugAssert( m != null );
         var parameter = m.ReturnType != typeof( void ) ? m.ReturnParameter : m.GetParameters()[0];
         return (parameter.ParameterType, parameter.GetNullabilityInfo());
     }

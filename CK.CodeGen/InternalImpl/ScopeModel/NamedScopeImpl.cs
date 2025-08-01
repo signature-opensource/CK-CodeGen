@@ -1,8 +1,9 @@
+using CK.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Diagnostics;
 
 namespace CK.CodeGen;
 
@@ -37,9 +38,9 @@ abstract class NamedScopeImpl : INamedScope
 
     private protected void SetName( string name )
     {
-        Debug.Assert( _name == null );
-        Debug.Assert( Parent != null );
-        Debug.Assert( !String.IsNullOrWhiteSpace( name ) );
+        Throw.DebugAssert( _name == null );
+        Throw.DebugAssert( Parent != null );
+        Throw.DebugAssert( !String.IsNullOrWhiteSpace( name ) );
         _name = name;
         _fullName = Parent.Parent != null
                     ? Parent.FullName + '.' + name

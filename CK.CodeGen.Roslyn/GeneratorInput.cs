@@ -1,3 +1,4 @@
+using CK.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
@@ -42,7 +43,7 @@ struct GeneratorInput
         bool addRuntimeAssembly,
         CSharpParseOptions? options )
     {
-        Debug.Assert( workspaceFactory != null );
+        Throw.DebugAssert( workspaceFactory != null );
         var assemblies = new HashSet<Assembly>();
         if( addRuntimeAssembly ) assemblies.Add( typeof( object ).Assembly );
         var trees = new List<SyntaxTree>();

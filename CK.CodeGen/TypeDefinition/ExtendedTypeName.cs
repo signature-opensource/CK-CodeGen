@@ -129,7 +129,7 @@ public class ExtendedTypeName
         Throw.CheckNotNullArgument( b );
         if( IsTuple )
         {
-            Debug.Assert( TupleTypeName != null );
+            Throw.DebugAssert( TupleTypeName != null );
             TupleTypeName.Write( b, nameReplacer );
         }
         else if( TypeName != null )
@@ -138,7 +138,7 @@ public class ExtendedTypeName
         }
         else
         {
-            Debug.Assert( ItemArrayType != null );
+            Throw.DebugAssert( ItemArrayType != null );
             ItemArrayType.Write( b, nameReplacer );
         }
         foreach( int d in ArrayDimensions )
