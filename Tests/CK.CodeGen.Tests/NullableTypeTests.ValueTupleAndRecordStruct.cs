@@ -1,5 +1,6 @@
-using Shouldly;
+using CK.Core;
 using NUnit.Framework;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -57,7 +58,7 @@ public partial class NullableTypeTests
     public void value_tuple_field_names_from_generic_parameters_is_breadth_first()
     {
         var fieldInfo = GetType()!.GetField( "ListValueTupleWithName", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic );
-        Debug.Assert( fieldInfo != null );
+        Throw.DebugAssert( fieldInfo != null );
         var attrs = fieldInfo.GetCustomAttributes( false );
         var names = attrs.OfType<TupleElementNamesAttribute>().Single();
         names.TransformNames[0].ShouldBe( "X" );

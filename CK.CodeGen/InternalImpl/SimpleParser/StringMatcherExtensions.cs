@@ -235,7 +235,7 @@ static class StringMatcherExtensions
             head.SkipWhiteSpacesAndJSComments();
             if( !head.TryMatch( '(' ) && !(isIndexer = head.TryMatch( '[' )) ) return false; // head.SetError( "Expected '[' or '('." ); 
         }
-        Debug.Assert( methodName != null );
+        Throw.DebugAssert( methodName != null );
         var buffer = new StringBuilder();
         head.SkipWhiteSpacesAndJSComments();
         List<FunctionDefinition.Parameter> parameters = new List<FunctionDefinition.Parameter>();

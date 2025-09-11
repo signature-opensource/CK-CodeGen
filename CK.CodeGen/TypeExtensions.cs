@@ -1,3 +1,4 @@
+using CK.Core;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -113,7 +114,7 @@ public static class TypeExtensions
                     int endNbParam = idxTick;
                     while( endNbParam < n.Length && Char.IsDigit( n, endNbParam ) ) endNbParam++;
                     int nbParams = int.Parse( n.AsSpan( idxTick, endNbParam - idxTick ), NumberStyles.Integer, NumberFormatInfo.InvariantInfo );
-                    Debug.Assert( nbParams > 0 );
+                    Throw.DebugAssert( nbParams > 0 );
                     var tName = n.Substring( 0, idxTick - 1 );
                     bool isValueTuple = tName == "global::System.ValueTuple";
                     Type subType = allGenArgs.Dequeue();
@@ -139,8 +140,8 @@ public static class TypeExtensions
                         // This lift the rest content, skipping the rest 8th slot itself.
                         if( iGen == 7 && isValueTuple )
                         {
-                            Debug.Assert( subType.Name.StartsWith( "ValueTuple", StringComparison.Ordinal ) );
-                            Debug.Assert( allGenArgs.Count == 0 );
+                            Throw.DebugAssert( subType.Name.StartsWith( "ValueTuple", StringComparison.Ordinal ) );
+                            Throw.DebugAssert( allGenArgs.Count == 0 );
                             var rest = subType.GetGenericArguments();
                             subType = rest[0];
                             nbParams = rest.Length - 1;

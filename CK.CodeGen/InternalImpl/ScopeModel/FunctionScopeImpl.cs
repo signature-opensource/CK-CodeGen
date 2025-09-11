@@ -1,3 +1,4 @@
+using CK.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,7 +25,7 @@ sealed class FunctionScopeImpl : NamedScopeImpl, IFunctionScope
                 break;
             }
             p = p.Parent;
-            Debug.Assert( p != null, "We eventually reached a top level type." );
+            Throw.DebugAssert( "We eventually reached a top level type.", p != null );
         }
     }
 

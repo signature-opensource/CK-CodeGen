@@ -40,15 +40,18 @@ public class GenerateResult
     public readonly IReadOnlyList<SyntaxTree> Sources;
 
     /// <summary>
+    /// Error raised by the emit processus itself.
+    /// <para>
+    /// When this is not null, <see cref="EmitResult"/> is necessarily null.
+    /// </para>
+    /// </summary>
+    public readonly Exception? EmitError;
+
+    /// <summary>
     /// The Roselyn result.
     /// Null if <see cref="CompilationSkipped"/> is true.
     /// </summary>
     public readonly EmitResult? EmitResult;
-
-    /// <summary>
-    /// Error raised by the emit processus itself.
-    /// </summary>
-    public readonly Exception? EmitError;
 
     /// <summary>
     /// Error resulting from the attempt to load the generated <see cref="Assembly"/> if any.
@@ -142,27 +145,30 @@ public class GenerateResult
                     {
                         monitor.Error( EmitError );
                     }
-                    if( EmitResult != null )
+                    else
                     {
-                        if( !EmitResult.Success )
+                        if( EmitResult != null )
                         {
-                            using( monitor.OpenInfo( $"{EmitResult.Diagnostics.Count()} Compilation diagnostics." ) )
+                            if( !EmitResult.Success )
                             {
-                                foreach( var diag in EmitResult.Diagnostics )
+                                using( monitor.OpenInfo( $"{EmitResult.Diagnostics.Count()} Compilation diagnostics." ) )
                                 {
-                                    monitor.Trace( diag.ToString() );
+                                    foreach( var diag in EmitResult.Diagnostics )
+                                    {
+                                        monitor.Trace( diag.ToString() );
+                                    }
                                 }
                             }
                         }
-                    }
-                    else
-                    {
-                        Debug.Assert( CompilationSkipped );
-                        using( monitor.OpenInfo( $"{ParseDiagnostics.Count()} Parsing diagnostics." ) )
+                        else
                         {
-                            foreach( var diag in ParseDiagnostics )
+                            Throw.DebugAssert( CompilationSkipped );
+                            using( monitor.OpenInfo( $"{ParseDiagnostics.Count()} Parsing diagnostics." ) )
                             {
-                                monitor.Trace( diag.ToString() );
+                                foreach( var diag in ParseDiagnostics )
+                                {
+                                    monitor.Trace( diag.ToString() );
+                                }
                             }
                         }
                     }

@@ -201,19 +201,19 @@ public static partial class NullabilityTypeExtensions
             // Annotations only apply to reference types. Only 1 (not null!) is of interest.
             if( thisOne == 1 && known.IsReferenceType() )
             {
-                Debug.Assert( known.IsNullable() );
+                Throw.DebugAssert( known.IsNullable() );
                 known &= ~NullabilityTypeKind.IsNullable;
             }
         }
         Type[]? genArgs = null;
         if( t.HasElementType )
         {
-            Debug.Assert( known.IsReferenceType() );
+            Throw.DebugAssert( known.IsReferenceType() );
             sub = new[] { GetNullableTypeTreeWithProfile( t.GetElementType()!, annotations, default, builder ) };
         }
         else if( t.IsGenericType )
         {
-            Debug.Assert( (known & NullabilityTypeKind.IsGenericType) != 0, "This has been already computed." );
+            Throw.DebugAssert( "This has been already computed.", (known & NullabilityTypeKind.IsGenericType) != 0 );
             genArgs = t.GetGenericArguments();
             sub = new NullableTypeTree[genArgs.Length];
             int idx = 0;
@@ -250,7 +250,7 @@ public static partial class NullabilityTypeExtensions
             else
             {
                 object? data = a.ConstructorArguments[0].Value;
-                Debug.Assert( data != null );
+                Throw.DebugAssert( data != null );
                 // A single value means "apply to everything in the type", e.g. 1 for Dictionary<string, string>, 2 for Dictionary<string?, string?>?
                 if( data is byte b )
                 {
@@ -259,12 +259,12 @@ public static partial class NullabilityTypeExtensions
                 else
                 {
                     var arguments = (System.Collections.ObjectModel.ReadOnlyCollection<CustomAttributeTypedArgument>)data;
-                    Debug.Assert( arguments.Count > 0 );
+                    Throw.DebugAssert( arguments.Count > 0 );
                     var firstByte = (byte)arguments[0].Value!;
                     // Complex nullability marker.
                     n |= NullabilityTypeKind.NRTFullNullable | NullabilityTypeKind.NRTFullNonNullable;
                     // Quick check.
-                    Debug.Assert( firstByte == 0 || (n & NullabilityTypeKind.IsValueType) == 0 );
+                    Throw.DebugAssert( firstByte == 0 || (n & NullabilityTypeKind.IsValueType) == 0 );
                     // Apply the first byte for this information.
                     if( firstByte == 1 ) n &= ~NullabilityTypeKind.IsNullable;
 
@@ -273,7 +273,7 @@ public static partial class NullabilityTypeExtensions
                     {
                         profile[i] = (byte)arguments[i + 1].Value!;
                     }
-                    Debug.Assert( profile.Length != 0, "Mono byte annotation is invalid." );
+                    Throw.DebugAssert( "Mono byte annotation is invalid.", profile.Length != 0 );
                 }
             }
         }

@@ -33,7 +33,7 @@ static class Helper
 
     internal static ICodeWriter AppendAccessProtection( this ICodeWriter w, MethodInfo method, AccessProtectionOption p )
     {
-        Debug.Assert( p != AccessProtectionOption.None );
+        Throw.DebugAssert( p != AccessProtectionOption.None );
         if( p == AccessProtectionOption.ThrowOnPureInternal
             && (method.IsAssembly || method.IsFamilyAndAssembly) )
         {

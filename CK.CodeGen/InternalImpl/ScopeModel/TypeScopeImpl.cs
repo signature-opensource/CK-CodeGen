@@ -28,7 +28,7 @@ sealed class TypeScopeImpl : TypeDefinerScopeImpl, ITypeScope
                 break;
             }
             p = p.Parent;
-            Debug.Assert( p != null, "We eventually reached the root namespace." );
+            Throw.DebugAssert( "We eventually reached the root namespace.", p != null );
         }
     }
 
@@ -42,7 +42,7 @@ sealed class TypeScopeImpl : TypeDefinerScopeImpl, ITypeScope
 
     internal void MergeWith( TypeScopeImpl other )
     {
-        Debug.Assert( other != null );
+        Throw.DebugAssert( other != null );
         if( TypeKey != other.TypeKey )
         {
             throw new InvalidOperationException( $"Unable to merge type '{_typeDef}' with '{other._typeDef}'." );

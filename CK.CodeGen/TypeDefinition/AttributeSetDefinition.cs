@@ -58,7 +58,7 @@ public class AttributeSetDefinition
 
     internal void MergeWith( AttributeSetDefinition set )
     {
-        Debug.Assert( set.Target == Target );
+        Throw.DebugAssert( set.Target == Target );
         foreach( var a in set.Attributes ) Attributes.Add( a );
     }
 }

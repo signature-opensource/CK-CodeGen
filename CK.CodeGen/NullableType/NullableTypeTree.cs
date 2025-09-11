@@ -273,13 +273,13 @@ public readonly struct NullableTypeTree : IEquatable<NullableTypeTree>
     public NullableTypeTree MergeReferenceTypesNullability( NullableTypeTree other )
     {
         if( Type != other.Type ) throw new ArgumentException( $"Nullability informations can only be merged for the same type. '{Type.ToCSharpName()}' is not the same as '{other.Type.ToCSharpName()}'.", nameof( other ) );
-        Debug.Assert( RawSubTypes.Count == other.RawSubTypes.Count );
+        Throw.DebugAssert( RawSubTypes.Count == other.RawSubTypes.Count );
 
         NullableTypeTree[]? subTypes = null;
         for( int i = 0; i < RawSubTypes.Count; ++i )
         {
             var t = RawSubTypes[i];
-            Debug.Assert( t.Type == other.RawSubTypes[i].Type );
+            Throw.DebugAssert( t.Type == other.RawSubTypes[i].Type );
             var m = t.MergeReferenceTypesNullability( other.RawSubTypes[i] );
             if( subTypes == null
                 && ((m.Kind & ~(NullabilityTypeKind.NRTFullNonNullable | NullabilityTypeKind.NRTFullNullable)) != (t.Kind & ~(NullabilityTypeKind.NRTFullNonNullable | NullabilityTypeKind.NRTFullNullable))
@@ -370,7 +370,7 @@ public readonly struct NullableTypeTree : IEquatable<NullableTypeTree>
                 // One of the subtypes differ: types are really different.
                 return null;
             }
-            Debug.Assert( m.Value.Kind != NullabilityTypeKind.None );
+            Throw.DebugAssert( m.Value.Kind != NullabilityTypeKind.None );
             if( subTypes == null
                 && ((m.Value.Kind & ~(NullabilityTypeKind.NRTFullNonNullable | NullabilityTypeKind.NRTFullNullable)) != (t.Kind & ~(NullabilityTypeKind.NRTFullNonNullable | NullabilityTypeKind.NRTFullNullable))
                     || m.Value.RawSubTypes != t.RawSubTypes) )

@@ -1,3 +1,4 @@
+using CK.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -57,7 +58,7 @@ public readonly struct NullabilityTypeInfo : IEquatable<NullabilityTypeInfo>
     /// <returns>True if this is equal to other, false otherwise.</returns>
     public bool Equals( NullabilityTypeInfo other )
     {
-        Debug.Assert( Kind != other.Kind || ((_profile == null) == (other._profile == null)), "If Kind are equals then both have a profile or not." );
+        Throw.DebugAssert( "If Kind are equals then both have a profile or not.", Kind != other.Kind || ((_profile == null) == (other._profile == null)) );
         // Strict equality.
         if( Kind == other.Kind
             && (_profile == null || _profile.SequenceEqual( other._profile! )) )
@@ -73,13 +74,13 @@ public readonly struct NullabilityTypeInfo : IEquatable<NullabilityTypeInfo>
         // other has the same basic type kind, it is nullable by default.
         if( Kind.IsNRTFullNullable() && !other.Kind.IsNRTAware() )
         {
-            Debug.Assert( other.Kind.IsReferenceType() && other.Kind.IsNullable() );
+            Throw.DebugAssert( other.Kind.IsReferenceType() && other.Kind.IsNullable() );
             return true;
         }
         // Reverse the previous check.
         if( other.Kind.IsNRTFullNullable() && !Kind.IsNRTAware() )
         {
-            Debug.Assert( Kind.IsReferenceType() && Kind.IsNullable() );
+            Throw.DebugAssert( Kind.IsReferenceType() && Kind.IsNullable() );
             return true;
         }
         return false;
@@ -108,7 +109,7 @@ public readonly struct NullabilityTypeInfo : IEquatable<NullabilityTypeInfo>
 
     IEnumerable<byte> OptimizedAnnotations()
     {
-        Debug.Assert( _profile == null );
+        Throw.DebugAssert( _profile == null );
         byte thisOne = 0;
         if( Kind.IsNRTFullNonNullable() ) thisOne = 1;
         else if( Kind.IsNRTFullNullable() ) thisOne = 2;

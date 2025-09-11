@@ -1,3 +1,4 @@
+using CK.Core;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -523,7 +524,7 @@ public sealed class TEMPNullabilityInfoContext
 
     bool TryUpdateGenericParameterNullability( TEMPNullabilityInfo nullability, Type genericParameter, Type? reflectedType )
     {
-        Debug.Assert( genericParameter.IsGenericParameter );
+        Throw.DebugAssert( genericParameter.IsGenericParameter );
 
         if( reflectedType is not null
             && !genericParameter.IsGenericMethodParameter
@@ -557,7 +558,7 @@ public sealed class TEMPNullabilityInfoContext
 
     bool TryUpdateGenericTypeParameterNullabilityFromReflectedType( TEMPNullabilityInfo nullability, Type genericParameter, Type context, Type reflectedType )
     {
-        Debug.Assert( genericParameter.IsGenericParameter && !genericParameter.IsGenericMethodParameter );
+        Throw.DebugAssert( genericParameter.IsGenericParameter && !genericParameter.IsGenericMethodParameter );
 
         Type contextTypeDefinition = context.IsGenericType && !context.IsGenericTypeDefinition ? context.GetGenericTypeDefinition() : context;
         if( genericParameter.DeclaringType == contextTypeDefinition )

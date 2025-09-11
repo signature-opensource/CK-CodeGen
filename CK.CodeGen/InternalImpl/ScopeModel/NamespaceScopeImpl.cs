@@ -1,8 +1,9 @@
+using CK.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace CK.CodeGen;
 
@@ -16,8 +17,8 @@ sealed class NamespaceScopeImpl : TypeDefinerScopeImpl, INamespaceScope
     internal NamespaceScopeImpl( CodeWorkspaceImpl ws, INamespaceScope? parent, string name )
         : base( ws, parent )
     {
-        Debug.Assert( (parent == null) == (name.Length == 0) );
-        Debug.Assert( parent == null || parent is NamespaceScopeImpl );
+        Throw.DebugAssert( (parent == null) == (name.Length == 0) );
+        Throw.DebugAssert( parent == null || parent is NamespaceScopeImpl );
         _usings = new Dictionary<string, KeyValuePair<string?, string?>>();
         _subNamespaces = new List<NamespaceScopeImpl>();
         _beforeNamespace = new CodePartRaw();
@@ -26,7 +27,7 @@ sealed class NamespaceScopeImpl : TypeDefinerScopeImpl, INamespaceScope
 
     internal void MergeWith( NamespaceScopeImpl other )
     {
-        Debug.Assert( other != null );
+        Throw.DebugAssert( other != null );
         _beforeNamespace.MergeWith( other._beforeNamespace );
         foreach( var u in other._usings )
         {
@@ -79,12 +80,12 @@ sealed class NamespaceScopeImpl : TypeDefinerScopeImpl, INamespaceScope
 
     INamespaceScope DoEnsureUsing( string alias, string? definition )
     {
-        Debug.Assert( (definition == null && CheckAndNormalizeNamespace( alias ) == alias)
-                      || (definition != null && CheckAndNormalizeOneName( alias ) == alias) );
+        Throw.DebugAssert( (definition == null && CheckAndNormalizeNamespace( alias ) == alias)
+                            || (definition != null && CheckAndNormalizeOneName( alias ) == alias) );
         var keyDef = definition;
         if( keyDef != null )
         {
-            Debug.Assert( definition != null, "Obviously..." );
+            Throw.DebugAssert( "Obviously...", definition != null );
             // We must normalize the trailing ;.
             definition = definition.Trim();
             if( definition.Length == 0 || definition == ";" ) throw new ArgumentException( $"'{definition}' is not a valid alias definition.", nameof( definition ) );
@@ -97,8 +98,8 @@ sealed class NamespaceScopeImpl : TypeDefinerScopeImpl, INamespaceScope
 
     INamespaceScope DoEnsureUsing( string alias, string? keyDef, string? definition )
     {
-        Debug.Assert( alias != null );
-        Debug.Assert( (keyDef == null) == (definition == null) );
+        Throw.DebugAssert( alias != null );
+        Throw.DebugAssert( (keyDef == null) == (definition == null) );
         if( _usings.TryGetValue( alias, out var defs ) )
         {
             if( defs.Key == keyDef ) return this;
