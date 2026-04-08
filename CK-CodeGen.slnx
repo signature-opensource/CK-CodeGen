@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="appveyor.yml" />
+    <File Path="Directory.Build.props" />
+    <File Path="NuGet.config" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <File Path="Tests/TestHelper.config" />
+    <Project Path="Tests/CK.CodeGen.Roslyn.Tests/CK.CodeGen.Roslyn.Tests.csproj" />
+    <Project Path="Tests/CK.CodeGen.Tests/CK.CodeGen.Tests.csproj" />
+  </Folder>
+  <Project Path="CK.CodeGen.Roslyn/CK.CodeGen.Roslyn.csproj" />
+  <Project Path="CK.CodeGen/CK.CodeGen.csproj" />
+</Solution>
