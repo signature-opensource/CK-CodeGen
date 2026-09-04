@@ -21,9 +21,10 @@ one for the source-string overload. Its knobs:
 
 The `CompilationOptions` row is worth reading twice, because the property's own summary says *"When let
 to null, defaults to the `DefaultCompilationOptions`"*. The constructor never lets it be null - it
-assigns an equivalent new instance - so that `?? DefaultCompilationOptions` fallback only ever fires on
-the `static` overloads, where the caller passes null explicitly. The comment is stale; the observable
-behaviour is the same output kind either way.
+assigns an equivalent new instance. The property stays `public CSharpCompilationOptions? { get; set; }`
+though, so setting it back to null reaches the `?? DefaultCompilationOptions` fallback through the
+instance path too - the comment is accurate for a state you can reach, the constructor merely
+pre-assigns. Either way the output kind is the same.
 
 `AutoRegisterRuntimeAssembly` is read as `!skipCompilation && AutoRegisterRuntimeAssembly`, so it does
 nothing in a parse-only run.
@@ -40,6 +41,72 @@ reference to bind to a different version than the one requested. The mismatches 
 not swallowed: they come back as `GenerateResult.LoadConflicts`. One overload is exempt and says so -
 the `SyntaxTree`-and-`MetadataReference` one is *"not protected by the WeakAssemblyNameResolver. It
 should be done, if necessary, by the caller."*
+
+### End to end
+
+Compiling a workspace and loading the result. This is the fixture's `CreateAssembly` and its
+`HandleCreateResult` joined into one flow - the fixture splits them across two methods:
+
+```csharp
+var g = new CodeGenerator( CodeWorkspace.Factory );
+g.Modules.AddRange( modules );
+GenerateResult result = g.Generate( sourceCode,
+                                    RandomDllPath,
+                                    references,
+                                    false,                      // skipCompilation
+                                    System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath );
+
+result.LogResult( TestHelper.Monitor, LogLevel.Info );
+result.Success.ShouldBeTrue();
+return result.Assembly;
+```
+
+`RandomDllPath` is the fixture's own per-run output path and `TestHelper` its monitor, from
+`using static CK.Testing.MonitorTestHelper`; the fixture also picks the loader through an `#if NET461`
+branch, `Assembly.LoadFrom` on the framework side. Note `Modules` being filled immediately before the
+call rather than once at construction - the list is cleared by every instance `Generate`, as the
+section below explains.
+
+`LogResult( IActivityMonitor monitor, LogLevel? dumpSources = null )` is the shortcut worth knowing,
+and it is outcome-driven rather than exhaustive: it always reports the load conflicts and closes with
+whether the assembly loaded, but the diagnostics appear **only on failure** - the emit ones, or the
+parse ones when compilation was skipped - and the sources only when you pass a level. So a successful
+generation logs three lines and a failing one logs what you need. Reach for it before reading the
+fields one by one.
+
+The parse-only variant, and the two forms side by side:
+
+```csharp
+var workspace = CodeWorkspace.Create();
+var global = workspace.Global;
+global.EnsureUsing( "System" );
+global.CreateType( "public class Tester" )
+         .Append( "public bool OK => true;" ).NewLine();
+
+// Compiled: CreateAssembly is the fixture's own wrapper around the call shown above.
+Assembly a = LocalTestHelper.CreateAssembly( workspace.GetGlobalSource(), workspace.AssemblyReferences );
+a.ShouldNotBeNull();
+
+// Parse-only: no path, no loader, and it still succeeds.
+var g = new CodeGenerator( CodeWorkspace.Factory );
+var r = g.Generate( workspace, null, skipCompilation: true );
+r.Success.ShouldBeTrue();
+r.Sources.Count.ShouldBe( 1 );
+```
+
+Note `workspace.AssemblyReferences` being passed straight through as the reference list: that is the
+transitive closure described above doing its job, so a caller hands over what the workspace collected
+and nothing more. And the shortest form of all needs no workspace at all:
+
+```csharp
+var r = CodeGenerator.Generate( "class P {}", null );
+r.Success.ShouldBeTrue();
+r.Sources.Count.ShouldBe( 1 );
+r.ParseDiagnostics.ShouldBeEmpty();
+```
+
+From [`LocalTestHelper`](../Tests/CK.CodeGen.Roslyn.Tests/LocalTestHelper.cs) and
+[`CompileToSourceStringTests`](../Tests/CK.CodeGen.Roslyn.Tests/CompileToSourceStringTests.cs).
 
 ## Modules
 
@@ -79,7 +146,8 @@ that are usually collapsed into one:
 each of the two constructors:
 
 - compiled: `EmitResult?.Success == true && AssemblyLoadError == null`;
-- skipped: every parse diagnostic is below `DiagnosticSeverity.Error`.
+- skipped: `ParseDiagnostics.All( d => d.Severity != DiagnosticSeverity.Error )` - an inequality on the
+  severity, not an ordering test.
 
 So a parse-only run can and does report success. On the compiled path, note that `Success` is false when
 the code compiled but the resulting assembly could not be loaded - the usual symptom of a version
