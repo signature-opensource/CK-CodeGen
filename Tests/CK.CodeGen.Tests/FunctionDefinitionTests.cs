@@ -40,7 +40,7 @@ public class FunctionDefinitionTests
     [TestCase( "ScopedParam( X a, scoped ref int b )", "ScopedParam(X,scoped&int)" )]
     public void CreateFunction_normalizes_its_key( string header, string key )
     {
-        FunctionDefinition.TryParse( header, out var f );
+        FunctionDefinition.TryParse( header, out FunctionDefinition? f ).ShouldBeTrue();
         f.Key.ShouldBe( key );
     }
 
@@ -51,7 +51,7 @@ public class FunctionDefinitionTests
     [TestCase( "C( Nullable<(Nullable<int>,System.Nullable<string>)>[]? c )", "C((int?,string?)?[]?)" )]
     public void Function_Keys_are_nullable_sensitive( string header, string key )
     {
-        FunctionDefinition.TryParse( header, out var f );
+        FunctionDefinition.TryParse( header, out var f ).ShouldBeTrue();
         f.Key.ShouldBe( key );
     }
 }

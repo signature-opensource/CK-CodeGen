@@ -53,30 +53,30 @@ public class CompileOverrideTests
 
         b.EnsureUsing( "System" )
          .EnsureUsing( "System.Collections.Generic" )
-         .EnsureUsing( t.Namespace );
+         .EnsureUsing( t.Namespace.ShouldNotBeNull() );
 
         var c = b.CreateType( h => h.Append( "class Specialized : " ).AppendCSharpName( t, true, true, true ) );
         c.CreatePassThroughConstructors( t );
 
-        c.CreateOverride( t.GetMethod( "Simple1" ) )
+        c.CreateOverride( t.GetMethod( "Simple1" ).ShouldNotBeNull() )
          .Append( "=> 3712;" );
 
-        c.CreateOverride( t.GetMethod( "VoidMethod" ) );
+        c.CreateOverride( t.GetMethod( "VoidMethod" ).ShouldNotBeNull() );
 
-        c.CreateOverride( t.GetMethod( "Simple2", BindingFlags.Instance | BindingFlags.NonPublic ) )
+        c.CreateOverride( t.GetMethod( "Simple2", BindingFlags.Instance | BindingFlags.NonPublic ).ShouldNotBeNull() )
             .Append( "=> x + '-' + g.ToString();" );
 
-        c.CreateOverride( t.GetMethod( "Simple3", BindingFlags.Instance | BindingFlags.NonPublic ) )
+        c.CreateOverride( t.GetMethod( "Simple3", BindingFlags.Instance | BindingFlags.NonPublic ).ShouldNotBeNull() )
             .Append( "g = Guid.NewGuid();" ).NewLine()
             .Append( @"x = ""Hello World!"" + Simple2( ""YES"", g );" ).NewLine()
             .Append( "return this;" );
 
-        c.CreateOverride( t.GetMethod( "VerbatimParameters", BindingFlags.Instance | BindingFlags.NonPublic ) ).Append( " => @this + @operator;" );
+        c.CreateOverride( t.GetMethod( "VerbatimParameters", BindingFlags.Instance | BindingFlags.NonPublic ).ShouldNotBeNull() ).Append( " => @this + @operator;" );
 
         Assembly a = LocalTestHelper.CreateAssembly( workspace.GetGlobalSource(), workspace.AssemblyReferences );
 
         Type tC = a.GetTypes().Single( n => n.Name == "Specialized" );
-        BaseToBeOverridden gotIt = (BaseToBeOverridden)Activator.CreateInstance( tC, new object[] { 3712 * 3712 } );
+        BaseToBeOverridden gotIt = (BaseToBeOverridden)Activator.CreateInstance( tC, [3712 * 3712] ).ShouldNotBeNull();
         gotIt.ValFromCtor.ShouldBe( 3712 * 3712 );
         gotIt.Simple1().ShouldBe( 3712 );
         string s;
@@ -97,19 +97,19 @@ public class CompileOverrideTests
 
         workspace.EnsureAssemblyReference( t );
 
-        b.EnsureUsing( t.Namespace );
+        b.EnsureUsing( t.Namespace.ShouldNotBeNull() );
         var c = b.CreateType( header => header.Append( "class Specialized<T> : " ).AppendCSharpName( t, true, true, true ).NewLine() );
-        c.CreateOverride( t.GetMethod( "Simple1" ) )
+        c.CreateOverride( t.GetMethod( "Simple1" ).ShouldNotBeNull() )
             .Append( "if (arg.Equals(default(T))) throw new System.ArgumentException();" ).NewLine()
             .Append( "return default(TResult);" );
 
-        c.CreateOverride( t.GetMethod( "Simple2" ) )
+        c.CreateOverride( t.GetMethod( "Simple2" ).ShouldNotBeNull() )
             .Append( "=> arg2 is T1;" );
 
         Assembly a = LocalTestHelper.CreateAssembly( workspace.GetGlobalSource(), workspace.AssemblyReferences );
 
         Type tC = a.GetTypes().Single( n => n.Name == "Specialized`1" ).MakeGenericType( typeof( int ) );
-        ContainsGenericMethods<int> gotIt = (ContainsGenericMethods<int>)Activator.CreateInstance( tC );
+        ContainsGenericMethods<int> gotIt = (ContainsGenericMethods<int>)Activator.CreateInstance( tC ).ShouldNotBeNull();
         gotIt.Simple1<bool>( 25 ).ShouldBeFalse();
         gotIt.Simple2( new object(), "test" ).ShouldBeTrue();
     }

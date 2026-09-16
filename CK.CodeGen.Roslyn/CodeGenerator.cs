@@ -49,14 +49,14 @@ public class CodeGenerator
 
     /// <summary>
     /// Gets or sets whether the assembly that defines the object type is
-    /// automaticaaly registered.
+    /// automatically registered.
     /// Defaults to true.
     /// </summary>
     public bool AutoRegisterRuntimeAssembly { get; set; } = true;
 
     /// <summary>
     /// Gets a mutable list of <see cref="ICodeGeneratorModule"/>.
-    /// Since a code module can maitain an internal state between the calls to <see cref="ICodeGeneratorModule.Rewrite(IReadOnlyList{SyntaxTree})"/>
+    /// Since a code module can maintain an internal state between the calls to <see cref="ICodeGeneratorModule.Rewrite(IReadOnlyList{SyntaxTree})"/>
     /// and <see cref="ICodeGeneratorModule.Inject(ICodeWorkspace)"/>, this list is cleared by each
     /// call to Generate instance methods.
     /// </summary>
@@ -83,40 +83,61 @@ public class CodeGenerator
     /// Generates an assembly from a source and a minimal list of required reference assemblies.
     /// </summary>
     /// <param name="code">The source code.</param>
-    /// <param name="assemblyPath">The full final assembly path (including the .dll extension). Can be null if skipCompilation is true.</param>
+    /// <param name="assemblyPath">The full final assembly path (including the .dll extension). Can be null only if <paramref name="skipCompilation"/> is true.</param>
     /// <param name="skipCompilation">True to skip the compilation. Only the parsing and the source generation is done.</param>
     /// <param name="loader">Optional loader function to load the final emitted assembly.</param>
     /// <returns>Encapsulation of the result.</returns>
-    public GenerateResult Generate( ICodeWorkspace code, string assemblyPath, bool skipCompilation, Func<string, Assembly>? loader = null )
+    public GenerateResult Generate( ICodeWorkspace code, string? assemblyPath, bool skipCompilation, Func<string, Assembly>? loader = null )
     {
-        if( code == null ) throw new ArgumentNullException( nameof( code ) );
+        Throw.CheckNotNullArgument( code );
         using( var weakLoader = WeakAssemblyNameResolver.TemporaryInstall() )
         {
             var input = GeneratorInput.Create( _workspaceFactory, code, Modules, !skipCompilation && AutoRegisterRuntimeAssembly, ParseOptions );
             Modules.Clear();
 
             if( skipCompilation ) return new GenerateResult( input.Trees );
+            Throw.CheckNotNullArgument( assemblyPath );
 
             var collector = new HashSet<Assembly>();
+            var skipped = new Dictionary<string, SkippedAssemblyReference>();
             foreach( var a in input.Assemblies )
             {
-                if( collector.Add( a ) ) Discover( a, collector );
+                if( collector.Add( a ) ) Discover( a, collector, skipped );
             }
             return Generate( CompilationOptions,
                              input.Trees,
                              assemblyPath,
                              collector.Select( a => MetadataReference.CreateFromFile( new Uri( a.Location ).LocalPath ) ),
                              loader )
-                    .WithLoadFailures( weakLoader.Conflicts );
+                    .WithLoadFailures( weakLoader.Conflicts, skipped );
         }
     }
 
-    static void Discover( Assembly a, HashSet<Assembly> collector )
+    static void Discover( Assembly a, HashSet<Assembly> collector, Dictionary<string, SkippedAssemblyReference> skipped )
     {
         foreach( var name in a.GetReferencedAssemblies() )
         {
-            var dep = Assembly.Load( name );
-            if( collector.Add( dep ) ) Discover( dep, collector );
+            Assembly dep;
+            try
+            {
+                dep = Assembly.Load( name );
+            }
+            catch( Exception ex ) when( ex is FileNotFoundException or FileLoadException or BadImageFormatException )
+            {
+                // A reference that cannot be loaded is not necessarily an error: the CLR binds references
+                // lazily (per method), so a reference that no executed code needs is never resolved. Being
+                // more eager than the CLR would turn any latent packaging defect anywhere in the transitive
+                // closure into a fatal error. Roslyn knows whether the generated code actually needs this
+                // assembly: if it does, a CS0012 diagnostic names both the missing assembly and the type
+                // that requires it. Skipping defers the failure to a strictly more informative one.
+                var fullName = name.FullName;
+                if( !skipped.ContainsKey( fullName ) )
+                {
+                    skipped.Add( fullName, new SkippedAssemblyReference( a.GetName(), name, ex ) );
+                }
+                continue;
+            }
+            if( collector.Add( dep ) ) Discover( dep, collector, skipped );
         }
     }
 
@@ -130,15 +151,14 @@ public class CodeGenerator
     /// <param name="compileOptions">The compilation options. Used only if compilation is required. Defaults to <see cref="DefaultCompilationOptions"/>.</param>
     /// <param name="loader">Optional loader function to load the final emitted assembly. Used only if compilation is required.</param>
     /// <returns>Encapsulation of the result.</returns>
-    static public GenerateResult Generate(
-        string code,
-        string? assemblyPath = null,
-        IEnumerable<Assembly>? references = null,
-        CSharpParseOptions? parseOptions = null,
-        CSharpCompilationOptions? compileOptions = null,
-        Func<string, Assembly>? loader = null )
+    static public GenerateResult Generate( string code,
+                                           string? assemblyPath = null,
+                                           IEnumerable<Assembly>? references = null,
+                                           CSharpParseOptions? parseOptions = null,
+                                           CSharpCompilationOptions? compileOptions = null,
+                                           Func<string, Assembly>? loader = null )
     {
-        SyntaxTree[] trees = new[] { SyntaxFactory.ParseSyntaxTree( code, parseOptions ) };
+        SyntaxTree[] trees = [SyntaxFactory.ParseSyntaxTree( code, parseOptions )];
         if( String.IsNullOrEmpty( assemblyPath ) )
         {
             // Parsing is enough.
@@ -147,12 +167,13 @@ public class CodeGenerator
         using( var weakLoader = WeakAssemblyNameResolver.TemporaryInstall() )
         {
             var collector = new HashSet<Assembly>();
+            var skipped = new Dictionary<string, SkippedAssemblyReference>();
             collector.Add( typeof( object ).Assembly );
             if( references != null )
             {
                 foreach( var a in references )
                 {
-                    if( collector.Add( a ) ) Discover( a, collector );
+                    if( collector.Add( a ) ) Discover( a, collector, skipped );
                 }
             }
             return Generate( compileOptions,
@@ -160,7 +181,7 @@ public class CodeGenerator
                              assemblyPath,
                              collector.Select( a => MetadataReference.CreateFromFile( new Uri( a.Location ).LocalPath ) ),
                              loader )
-                    .WithLoadFailures( weakLoader.Conflicts );
+                    .WithLoadFailures( weakLoader.Conflicts, skipped );
         }
     }
 
@@ -178,23 +199,20 @@ public class CodeGenerator
     /// <param name="allReferences">Optional list of assemblies' references.</param>
     /// <param name="loader">Optional loader function to load the final emitted assembly.</param>
     /// <returns>Encapsulation of the result.</returns>
-    static public GenerateResult Generate(
-        CSharpCompilationOptions? compileOptions,
-        IReadOnlyList<SyntaxTree> trees,
-        string assemblyPath,
-        IEnumerable<MetadataReference>? allReferences = null,
-        Func<string, Assembly>? loader = null )
+    static public GenerateResult Generate( CSharpCompilationOptions? compileOptions,
+                                           IReadOnlyList<SyntaxTree> trees,
+                                           string assemblyPath,
+                                           IEnumerable<MetadataReference>? allReferences = null,
+                                           Func<string, Assembly>? loader = null )
     {
         if( assemblyPath == null ) throw new ArgumentNullException( nameof( assemblyPath ) );
         try
         {
             var option = (compileOptions ?? DefaultCompilationOptions).WithAssemblyIdentityComparer( DesktopAssemblyIdentityComparer.Default );
-            CSharpCompilation compilation = CSharpCompilation.Create(
-                Path.GetFileNameWithoutExtension( assemblyPath ),
-                trees,
-                allReferences,
-                option );
-
+            CSharpCompilation compilation = CSharpCompilation.Create( Path.GetFileNameWithoutExtension( assemblyPath ),
+                                                                      trees,
+                                                                      allReferences,
+                                                                      option );
             var r = compilation.Emit( assemblyPath );
             if( r.Success && loader != null )
             {
@@ -211,7 +229,7 @@ public class CodeGenerator
         }
         catch( Exception ex )
         {
-            return new GenerateResult( ex, Array.Empty<SyntaxTree>(), null, null, null, null );
+            return new GenerateResult( ex, [], null, null, null, null );
         }
     }
 }

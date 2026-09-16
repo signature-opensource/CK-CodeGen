@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Diagnostics.CodeAnalysis;
 using CK.CodeGen.SimpleParser;
-using System.Diagnostics;
 
 namespace CK.CodeGen;
 
@@ -172,7 +171,7 @@ static class StringMatcherExtensions
             if( !head.TryMatch( ':' ) ) return false;
             targetOrName = null;
         }
-        List<AttributeDefinition> attributes = new List<AttributeDefinition>();
+        var attributes = new List<AttributeDefinition>();
         do
         {
             head.SkipWhiteSpacesAndJSComments();

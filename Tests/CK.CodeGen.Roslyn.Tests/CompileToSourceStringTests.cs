@@ -59,8 +59,8 @@ public class CompileToSourceStringTests
         TimeSpan tT = TimeSpan.FromMilliseconds( 987897689 );
         Guid g = new Guid( "4CCF5143-11C2-485F-93CE-76B4B8E1AFA0" );
 
-        object[] array = new object[]
-        {
+        object?[] array =
+        [
             null,
             true,
             false,
@@ -88,7 +88,7 @@ public class CompileToSourceStringTests
             tT,
             System.Type.Missing,
             typeof(Dictionary<string,int>),
-        };
+        ];
         #endregion
 
         global.EnsureUsing( "System" )
@@ -158,8 +158,8 @@ public class CompileToSourceStringTests
         var source = workspace.GetGlobalSource();
         var references = workspace.AssemblyReferences;
         Assembly a = LocalTestHelper.CreateAssembly( source, references );
-        object tester = Activator.CreateInstance( a.ExportedTypes.Single( t => t.Name == "Tester" ) );
-        string diff = (string)tester.GetType().GetMethod( "Run" ).Invoke( tester, Array.Empty<object>() );
+        object tester = Activator.CreateInstance( a.ExportedTypes.Single( t => t.Name == "Tester" ) ).ShouldNotBeNull();
+        string diff = (string)tester.GetType().GetMethod( "Run" ).ShouldNotBeNull().Invoke( tester, [] ).ShouldNotBeNull();
         diff.ShouldBeEmpty();
     }
 
@@ -173,7 +173,7 @@ public class CompileToSourceStringTests
 
         int PrivateProp => 37132;
 
-        public event EventHandler<int> Event;
+        public event EventHandler<int>? Event;
     }
 
     [Test]
@@ -215,37 +215,37 @@ public class CompileToSourceStringTests
         Assembly a = LocalTestHelper.CreateAssembly( workspace.GetGlobalSource(), workspace.AssemblyReferences );
         Type memberFinder = a.ExportedTypes.Single( t => t.Name == "MemberFinder" );
 
-        var eThisTestMethod = (MethodInfo)memberFinder.GetField( "ThisTestMethod" ).GetValue( null );
+        var eThisTestMethod = (MethodInfo?)memberFinder.GetField( "ThisTestMethod" ).ShouldNotBeNull().GetValue( null );
         eThisTestMethod.ShouldBeSameAs( thisTestMethod );
 
-        var eValIGen = (MethodInfo)memberFinder.GetField( "ValIGen" ).GetValue( null );
+        var eValIGen = (MethodInfo?)memberFinder.GetField( "ValIGen" ).ShouldNotBeNull().GetValue( null );
         eValIGen.ShouldBeSameAs( ValIGen );
 
-        var eValSGen = (MethodInfo)memberFinder.GetField( "ValSGen" ).GetValue( null );
+        var eValSGen = (MethodInfo?)memberFinder.GetField( "ValSGen" ).ShouldNotBeNull().GetValue( null );
         eValSGen.ShouldBeSameAs( ValSGen );
 
-        var ePropGen = (PropertyInfo)memberFinder.GetField( "PropGen" ).GetValue( null );
+        var ePropGen = (PropertyInfo?)memberFinder.GetField( "PropGen" ).ShouldNotBeNull().GetValue( null );
         ePropGen.ShouldBeSameAs( PropGen );
 
-        var eEventGen = (EventInfo)memberFinder.GetField( "EventGen" ).GetValue( null );
+        var eEventGen = (EventInfo?)memberFinder.GetField( "EventGen" ).ShouldNotBeNull().GetValue( null );
         eEventGen.ShouldBeSameAs( EventGen );
 
-        var eCtorGen = (ConstructorInfo)memberFinder.GetField( "CtorGen" ).GetValue( null );
+        var eCtorGen = (ConstructorInfo?)memberFinder.GetField( "CtorGen" ).ShouldNotBeNull().GetValue( null );
         eCtorGen.ShouldBeSameAs( CtorGen );
 
-        var eValI = (MethodInfo)memberFinder.GetField( "ValI" ).GetValue( null );
+        var eValI = (MethodInfo?)memberFinder.GetField( "ValI" ).ShouldNotBeNull().GetValue( null );
         eValI.ShouldBeSameAs( ValI );
 
-        var eValS = (MethodInfo)memberFinder.GetField( "ValS" ).GetValue( null );
+        var eValS = (MethodInfo?)memberFinder.GetField( "ValS" ).ShouldNotBeNull().GetValue( null );
         eValS.ShouldBeSameAs( ValS );
 
-        var eProp = (PropertyInfo)memberFinder.GetField( "Prop" ).GetValue( null );
+        var eProp = (PropertyInfo?)memberFinder.GetField( "Prop" ).ShouldNotBeNull().GetValue( null );
         eProp.ShouldBeSameAs( Prop );
 
-        var eEvent = (EventInfo)memberFinder.GetField( "Event" ).GetValue( null );
+        var eEvent = (EventInfo?)memberFinder.GetField( "Event" ).ShouldNotBeNull().GetValue( null );
         eEvent.ShouldBeSameAs( Event );
 
-        var eCtor = (ConstructorInfo)memberFinder.GetField( "Ctor" ).GetValue( null );
+        var eCtor = (ConstructorInfo?)memberFinder.GetField( "Ctor" ).ShouldNotBeNull().GetValue( null );
         eCtor.ShouldBeSameAs( Ctor );
     }
 }

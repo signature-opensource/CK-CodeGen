@@ -15,7 +15,7 @@ readonly struct FunctionDefiner
 
     public FunctionScopeImpl Create( CodeWorkspaceImpl ws, IFunctionDefinerScope h, Action<IFunctionScope> header )
     {
-        if( header == null ) throw new ArgumentNullException( nameof( header ) );
+        Throw.CheckNotNullArgument( header );
         FunctionScopeImpl f = new FunctionScopeImpl( ws, h );
         header( f );
         f.Initialize();

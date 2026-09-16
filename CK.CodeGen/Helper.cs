@@ -1,9 +1,9 @@
 using CK.Core;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
 
 namespace CK.CodeGen;
 
@@ -94,9 +94,9 @@ static class Helper
 
     internal static void CheckIsOverridable( MethodInfo method )
     {
-        if( method == null ) throw new ArgumentNullException( nameof( method ) );
+        Throw.CheckNotNullArgument( method );
         if( !method.IsVirtual || method.IsStatic || method.IsFinal )
-            throw new ArgumentException( $"Method {method} is not overridable.", nameof( method ) );
+            Throw.ArgumentException( nameof( method ), $"Method {method} is not overridable." );
     }
 
     internal static string RemoveGenericParameters( string typeName )

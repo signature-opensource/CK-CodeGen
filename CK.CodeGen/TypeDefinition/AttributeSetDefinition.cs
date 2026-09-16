@@ -1,6 +1,5 @@
 using CK.Core;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
 
 namespace CK.CodeGen;
@@ -43,7 +42,12 @@ public class AttributeSetDefinition
         if( Attributes.Count > 0 )
         {
             b.Append( '[' );
-            if( Target != CodeAttributeTarget.None ) b.Append( Target.ToString().ToLowerInvariant() ).Append( ": " );
+            if( Target != CodeAttributeTarget.None )
+            {
+#pragma warning disable CA1308 // Normalize strings to uppercase
+                b.Append( Target.ToString().ToLowerInvariant() ).Append( ": " );
+#pragma warning restore CA1308 // Normalize strings to uppercase
+            }
             bool already = false;
             foreach( var one in Attributes )
             {

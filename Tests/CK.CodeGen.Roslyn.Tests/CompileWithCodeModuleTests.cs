@@ -13,7 +13,9 @@ namespace System
 {
     public static class CKFixDBNull
     {
-        public static object Value = typeof( object ).Assembly.GetType( "System.DBNull" ).GetField( "Value" ).GetValue( null );
+        public static object Value = typeof( object ).Assembly.GetType( "System.DBNull" ).ShouldNotBeNull()
+                                                              .GetField( "Value" ).ShouldNotBeNull()
+                                                              .GetValue( null ).ShouldNotBeNull();
     }
 }
 
@@ -94,14 +96,15 @@ namespace CK.CodeGen.Roslyn.Tests
             var r = gen.Generate( workspace, LocalTestHelper.RandomDllPath, false, Assembly.LoadFrom );
             r.LogResult( TestHelper.Monitor );
             r.Success.ShouldBeTrue();
+            r.Assembly.ShouldNotBeNull();
             gen.Modules.ShouldBeEmpty();
 
             var replaced = r.Assembly.ExportedTypes.Single( t => t.FullName == "Original.DBNullWillBeReplaced" );
-            replaced.GetField( "V", BindingFlags.Static | BindingFlags.Public ).GetValue( null )
+            replaced.GetField( "V", BindingFlags.Static | BindingFlags.Public ).ShouldNotBeNull().GetValue( null )
                 .ShouldBe( "I'm the DBNull." );
 
             var real = r.Assembly.ExportedTypes.Single( t => t.FullName == "RealDBNull" );
-            real.GetField( "V", BindingFlags.Static | BindingFlags.Public ).GetValue( null )
+            real.GetField( "V", BindingFlags.Static | BindingFlags.Public ).ShouldNotBeNull().GetValue( null )
                 .ShouldBe( DBNull.Value );
 
         }

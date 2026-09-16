@@ -3,7 +3,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Emit;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -34,13 +33,23 @@ public class GenerateResult
     public readonly IReadOnlyCollection<AssemblyLoadConflict>? LoadConflicts;
 
     /// <summary>
+    /// List of <see cref="SkippedAssemblyReference"/>: assembly references that could not be loaded
+    /// while transitively closing the set of references and have been skipped.
+    /// This is not an error by itself (the CLR resolves references lazily, so a reference that no code
+    /// needs is never loaded): when the generated code actually requires one of them, the compilation
+    /// fails with a CS0012 diagnostic that names it.
+    /// Defaults to null.
+    /// </summary>
+    public readonly IReadOnlyList<SkippedAssemblyReference>? SkippedReferences;
+
+    /// <summary>
     /// List of final Syntax trees that have been generated, parsed (and compiled
     /// if compilation has not been skipped).
     /// </summary>
     public readonly IReadOnlyList<SyntaxTree> Sources;
 
     /// <summary>
-    /// Error raised by the emit processus itself.
+    /// Error raised by the emit process itself.
     /// <para>
     /// When this is not null, <see cref="EmitResult"/> is necessarily null.
     /// </para>
@@ -73,13 +82,21 @@ public class GenerateResult
     /// </summary>
     /// <param name="eE">Emit exception.</param>
     /// <param name="sources">Sources.</param>
-    /// <param name="r">Rosely result.</param>
+    /// <param name="r">Roselyn result.</param>
     /// <param name="a">Loaded assembly if any.</param>
     /// <param name="e">Load error if any.</param>
     /// <param name="f">Load failures.</param>
-    internal GenerateResult( Exception? eE, IReadOnlyList<SyntaxTree> sources, EmitResult? r, Assembly? a, Exception? e, IReadOnlyList<AssemblyLoadConflict>? f )
+    /// <param name="skipped">Skipped assembly references.</param>
+    internal GenerateResult( Exception? eE,
+                             IReadOnlyList<SyntaxTree> sources,
+                             EmitResult? r,
+                             Assembly? a,
+                             Exception? e,
+                             IReadOnlyList<AssemblyLoadConflict>? f,
+                             IReadOnlyList<SkippedAssemblyReference>? skipped = null )
     {
         CompilationSkipped = false;
+        SkippedReferences = skipped;
         EmitError = eE;
         Assembly = a;
         EmitResult = r;
@@ -100,6 +117,7 @@ public class GenerateResult
         EmitResult = null;
         AssemblyLoadError = null;
         LoadConflicts = null;
+        SkippedReferences = null;
         CompilationSkipped = true;
         Sources = sources;
         Success = ParseDiagnostics.All( d => d.Severity != DiagnosticSeverity.Error );
@@ -109,7 +127,7 @@ public class GenerateResult
     /// Dumps the result of the compilation into a monitor.
     /// </summary>
     /// <param name="monitor">The monitor to use.</param>
-    /// <param name="dumpSources">Optionnaly dumps the source as another <see cref="CK.Core.LogLevel"/>.</param>
+    /// <param name="dumpSources">Optionally dumps the source as another <see cref="CK.Core.LogLevel"/>.</param>
     public void LogResult( IActivityMonitor monitor, LogLevel? dumpSources = null )
     {
         if( monitor == null ) throw new ArgumentNullException( nameof( monitor ) );
@@ -129,6 +147,16 @@ public class GenerateResult
                         {
                             monitor.Error( e.ToString() );
                         }
+                    }
+                }
+            }
+            if( SkippedReferences != null && SkippedReferences.Count > 0 )
+            {
+                using( monitor.OpenWarn( $"{SkippedReferences.Count} assembly reference(s) skipped: they cannot be loaded. If the generated code requires one of them, a CS0012 compilation error names it." ) )
+                {
+                    foreach( var s in SkippedReferences )
+                    {
+                        monitor.Warn( s.ToString() );
                     }
                 }
             }
@@ -180,7 +208,7 @@ public class GenerateResult
                 monitor.Error( "Generated assembly load failed.", AssemblyLoadError );
             }
             monitor.CloseGroup( Assembly != null
-                                        ? "Generated assembly successfuly loaded."
+                                        ? "Generated assembly successfully loaded."
                                         : (Success ? "Succeeded." : "Failed.") );
         }
     }
@@ -202,5 +230,7 @@ public class GenerateResult
         }
     }
 
-    internal GenerateResult WithLoadFailures( IReadOnlyList<AssemblyLoadConflict> f ) => new GenerateResult( EmitError, Sources, EmitResult, Assembly, AssemblyLoadError, f );
+    internal GenerateResult WithLoadFailures( IReadOnlyList<AssemblyLoadConflict> f, Dictionary<string, SkippedAssemblyReference> skipped )
+        => new GenerateResult( EmitError, Sources, EmitResult, Assembly, AssemblyLoadError, f,
+                               skipped.Count > 0 ? skipped.Values.ToArray() : null );
 }

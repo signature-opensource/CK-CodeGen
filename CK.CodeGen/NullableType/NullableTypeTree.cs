@@ -1,8 +1,8 @@
 using CK.Core;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text;
 
 namespace CK.CodeGen;
@@ -14,7 +14,7 @@ public readonly struct NullableTypeTree : IEquatable<NullableTypeTree>
 {
     readonly NullableTypeTree[] _rawSubTypes;
 
-    class FixDictionaryBuilder : INullableTypeTreeBuilder
+    sealed class FixDictionaryBuilder : INullableTypeTreeBuilder
     {
         public static readonly INullableTypeTreeBuilder Instance = new FixDictionaryBuilder();
 
@@ -255,9 +255,13 @@ public readonly struct NullableTypeTree : IEquatable<NullableTypeTree>
     /// <param name="subTypes">The sub types (generic parameters or array element).</param>
     public NullableTypeTree( Type t, NullabilityTypeKind k, NullableTypeTree[] subTypes )
     {
-        if( t == null ) throw new ArgumentNullException( nameof( t ) );
-        if( subTypes == null ) throw new ArgumentNullException( nameof( subTypes ) );
-        if( t.IsGenericType && t.GetGenericTypeDefinition() == typeof( Nullable<> ) ) throw new ArgumentException( "Cannot be a Nullable<>.", nameof( t ) );
+        Throw.CheckNotNullArgument( t );
+        Throw.CheckNotNullArgument( subTypes );
+        if( t.IsGenericType && t.GetGenericTypeDefinition() == typeof( Nullable<> ) )
+        {
+            Throw.ArgumentException( nameof( t ), "Cannot be a Nullable<>." );
+        }
+
         Type = t;
         Kind = k;
         _rawSubTypes = subTypes;

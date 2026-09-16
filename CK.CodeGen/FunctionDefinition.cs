@@ -2,9 +2,9 @@ using CK.CodeGen.SimpleParser;
 using CK.Core;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text;
 
 namespace CK.CodeGen;
@@ -182,7 +182,7 @@ public partial class FunctionDefinition
     /// <returns>The StringBuilder to enable fluent syntax.</returns>
     public StringBuilder Write( StringBuilder b )
     {
-        if( b == null ) throw new ArgumentNullException( nameof( b ) );
+        Throw.CheckNotNullArgument( b );
         if( Attributes.HasAttributes )
         {
             Attributes.Write( b );

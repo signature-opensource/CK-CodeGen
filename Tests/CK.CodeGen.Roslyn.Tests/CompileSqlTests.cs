@@ -29,7 +29,7 @@ public class CompileSqlTests
          .EnsureUsing( "Microsoft.Data.SqlClient" );
 
         var type = b.CreateType( w => w.Append( "public class GGGG : " ).AppendCSharpName( typeof( SimpleBase ), true, true, true ) );
-        type.CreateOverride( typeof( SimpleBase ).GetMethod( "Do" ) )
+        type.CreateOverride( typeof( SimpleBase ).GetMethod( "Do" ).ShouldNotBeNull() )
             .Append(
             @"if( i.HasValue )
                 {
@@ -44,7 +44,7 @@ public class CompileSqlTests
 
         Assembly a = LocalTestHelper.CreateAssembly( source, references );
         Type t = a.GetTypes().Single( n => n.Name == "GGGG" );
-        SimpleBase gotIt = (SimpleBase)Activator.CreateInstance( t );
+        SimpleBase gotIt = (SimpleBase)Activator.CreateInstance( t ).ShouldNotBeNull();
         int? k = 67;
         SqlCommand cmd = gotIt.Do( ref k );
         k.ShouldBe( 67 * 67 );

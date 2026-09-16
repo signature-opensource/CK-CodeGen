@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
 
 namespace CK.CodeGen;
 
@@ -24,8 +25,8 @@ public static class TypeScopeExtensions
     /// <returns>This function scopes created.</returns>
     public static List<IFunctionScope> CreatePassThroughConstructors( this ITypeScope @this, Type baseType, Func<ConstructorInfo, string?>? accessBuilder = null )
     {
-        if( @this == null ) throw new ArgumentNullException( nameof( @this ) );
-        if( baseType == null ) throw new ArgumentNullException( nameof( baseType ) );
+        Throw.CheckNotNullArgument( @this );
+        Throw.CheckNotNullArgument( baseType );
         List<IFunctionScope> result = new List<IFunctionScope>();
         foreach( var c in baseType.GetConstructors( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic )
                                   .Where( c => c.IsPublic || c.IsFamily || c.IsFamilyOrAssembly ) )
@@ -85,7 +86,7 @@ public static class TypeScopeExtensions
     /// <returns>The newly created function scope.</returns>
     public static IFunctionScope CreateSealedOverride( this ITypeScope @this, MethodInfo method )
     {
-        if( @this == null ) throw new ArgumentNullException( nameof( @this ) );
+        Throw.CheckNotNullArgument( @this );
         Helper.CheckIsOverridable( method );
         return @this.CreateFunction( h => h.DoAppendSignature( AccessProtectionOption.ThrowOnPureInternal, "sealed override ", method ) );
     }

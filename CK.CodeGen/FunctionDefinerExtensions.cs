@@ -1,3 +1,4 @@
+using CK.Core;
 using System;
 
 namespace CK.CodeGen;
@@ -17,7 +18,7 @@ public static class FunctionDefinerExtensions
     /// <returns>The new function scope.</returns>
     public static IFunctionScope CreateFunction( this IFunctionDefinerScope @this, string header )
     {
-        if( header == null ) throw new ArgumentNullException( nameof( header ) );
+        Throw.CheckNotNullArgument( header );
         return @this.CreateFunction( t => t.Append( header ) );
     }
 

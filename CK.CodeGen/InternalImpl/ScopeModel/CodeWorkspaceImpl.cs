@@ -1,10 +1,12 @@
-using System.Reflection;
-using System.Collections.Generic;
+using CK.Core;
 using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.PortableExecutable;
 
 namespace CK.CodeGen;
 
-class CodeWorkspaceImpl : ICodeWorkspace
+sealed class CodeWorkspaceImpl : ICodeWorkspace
 {
     readonly HashSet<Assembly> _assemblies;
     int _currentTypeScopeId;
@@ -25,13 +27,13 @@ class CodeWorkspaceImpl : ICodeWorkspace
 
     public void DoEnsureAssemblyReference( Assembly assembly )
     {
-        if( assembly == null ) throw new ArgumentNullException( nameof( assembly ) );
+        Throw.CheckNotNullArgument( assembly );
         _assemblies.Add( assembly );
     }
 
     public void MergeWith( ICodeWorkspace other )
     {
-        if( other == null ) throw new ArgumentNullException( nameof( other ) );
+        Throw.CheckNotNullArgument( other );
         if( other != this )
         {
             foreach( var a in other.AssemblyReferences ) _assemblies.Add( a );

@@ -1,5 +1,4 @@
 using NUnit.Framework;
-using Shouldly;
 
 namespace CK.CodeGen.Tests;
 

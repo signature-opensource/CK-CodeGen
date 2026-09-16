@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace CK.CodeGen;
 
-class CodeProjectImpl : ICodeProject
+sealed class CodeProjectImpl : ICodeProject
 {
     public CodeProjectImpl( string projectName, ICodeWorkspace code )
     {

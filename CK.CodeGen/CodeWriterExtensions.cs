@@ -492,15 +492,17 @@ public static class CodeWriterExtensions
     static public T AppendArray<T, TItem>( this T @this, IEnumerable<TItem>? e ) where T : ICodeWriter
     {
         if( e == null ) return @this.Append( "null" );
-        if( !e.Any() ) return @this.Append( "System.Array.Empty<" ).AppendGlobalTypeName( typeof( TItem ), false ).Append( ">()" );
+        var enumerator = e.GetEnumerator(); 
+        if( !enumerator.MoveNext() ) return @this.Append( "System.Array.Empty<" ).AppendGlobalTypeName( typeof( TItem ), false ).Append( ">()" );
         @this.Append( "new " ).AppendGlobalTypeName( typeof( TItem ), false ).Append( "[]{" );
         bool already = false;
-        foreach( TItem x in e )
+        do
         {
             if( already ) @this.Append( "," );
             else already = true;
-            Append( @this, x );
+            Append( @this, enumerator.Current );
         }
+        while( enumerator.MoveNext() );
         return @this.Append( "}" );
     }
 
@@ -551,11 +553,11 @@ public static class CodeWriterExtensions
     /// The value is written as its integral type value casted into the enum type.
     /// </summary>
     /// <typeparam name="T">Actual type of the code writer.</typeparam>
-    /// <typeparam name="E">Type of the <see cref="Enum"/>.</typeparam>
+    /// <typeparam name="TEnum">Type of the <see cref="Enum"/>.</typeparam>
     /// <param name="this">This code writer.</param>
     /// <param name="o">The enum value.</param>
     /// <returns>This code writer to enable fluent syntax.</returns>
-    static public T Append<T, E>( this T @this, E o ) where T : ICodeWriter where E : Enum => AppendEnumValue( @this, typeof( E ), o );
+    static public T Append<T, TEnum>( this T @this, TEnum o ) where T : ICodeWriter where TEnum : Enum => AppendEnumValue( @this, typeof( TEnum ), o );
 
     static T AppendEnumValue<T>( T @this, Type t, object o ) where T : ICodeWriter
     {

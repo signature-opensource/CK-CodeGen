@@ -2,9 +2,7 @@ using CK.Core;
 using Shouldly;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 using static CK.Testing.MonitorTestHelper;
 
@@ -29,7 +27,7 @@ static partial class LocalTestHelper
     {
         result.LogResult( TestHelper.Monitor, LogLevel.Info );
         result.Success.ShouldBeTrue();
-        return result.Assembly;
+        return result.Assembly.ShouldNotBeNull();
     }
 
     private static Func<string, Assembly> GetAssemblyLoader()
@@ -42,6 +40,4 @@ static partial class LocalTestHelper
 #endif
         return loader;
     }
-
-    static string GetTestProjectPath( [CallerFilePath] string path = null ) => Path.GetDirectoryName( path );
 }
