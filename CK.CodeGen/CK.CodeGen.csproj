@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Description></Description>
   </PropertyGroup>
   <!-- See https://docs.microsoft.com/en-us/dotnet/standard/base-types/string-comparison-net-5-plus -->
