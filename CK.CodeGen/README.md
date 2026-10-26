@@ -112,8 +112,8 @@ classDiagram
     ICodeWorkspace o-- INamespaceScope : Global
 ```
 
-Read it as three layers. [`ICodeWriter`](ICodeWriter.cs) is *"the most basic interface: a simple string
-fragment collector"* - one method, `DoAdd`. On top of it, [`INamedScope`](INamedScope.cs) adds a name, a
+Read it as three layers. [`ICodeWriter`](ICodeWriter.cs): *"Most basic interface: a simple string
+fragment collector."* It has one method, `DoAdd`. On top of it, [`INamedScope`](INamedScope.cs) adds a name, a
 parent and the ability to `Build` itself into a `StringBuilder`. Then the two *definer* interfaces split
 by what a scope may contain: [`ITypeDefinerScope`](ITypeDefinerScope.cs) creates types,
 [`IFunctionDefinerScope`](IFunctionDefinerScope.cs) creates functions. A namespace is a type definer, a
@@ -121,11 +121,8 @@ type is both, and a function definer can nest functions - which is how local fun
 
 Watch the `ICodeWriter` edges rather than the names: `ITypeDefinerScope` is one, so raw code can be
 dropped into a namespace or a type directly, and so is `IFunctionScope`, so a method body is written the
-same way. `IFunctionDefinerScope` is **not**, even though its own summary claims *"It is itself a
-`ICodeWriter`: raw code can be appendend to it as needed"* - the declaration is
-`IFunctionDefinerScope : INamedScope`. In practice this costs nothing, since both types that implement
-it are writers by the other route; it only means you cannot append through a variable typed as the
-definer interface itself.
+same way. `IFunctionDefinerScope` is an `INamedScope` only, not an `ICodeWriter`: the types that
+extend it (`ITypeScope`, `IFunctionScope`) are writers through their other base.
 
 `INamedScope.Memory` is a plain dictionary hanging off each scope, and
 [`MemorizeOnce`](NamedScopedExtensions.cs) is its idiomatic use: it returns true the first time a given

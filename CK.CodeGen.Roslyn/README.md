@@ -19,20 +19,18 @@ one for the source-string overload. Its knobs:
 | `AutoRegisterRuntimeAssembly` | `true` - the assembly defining `object` is referenced automatically, but only when compiling |
 | `Modules` | empty |
 
-The `CompilationOptions` row is worth reading twice, because the property's own summary says *"When let
-to null, defaults to the `DefaultCompilationOptions`"*. The constructor never lets it be null - it
-assigns an equivalent new instance. The property stays `public CSharpCompilationOptions? { get; set; }`
-though, so setting it back to null reaches the `?? DefaultCompilationOptions` fallback through the
-instance path too - the comment is accurate for a state you can reach, the constructor merely
-pre-assigns. Either way the output kind is the same.
+`CompilationOptions` is nullable: set to null, the static `DefaultCompilationOptions` (also a
+`DynamicallyLinkedLibrary` output) is used.
 
 `AutoRegisterRuntimeAssembly` is read as `!skipCompilation && AutoRegisterRuntimeAssembly`, so it does
 nothing in a parse-only run.
 
-`Generate( ICodeWorkspace code, string assemblyPath, bool skipCompilation, Func<string,Assembly>? loader )`
+`Generate( ICodeWorkspace code, string? assemblyPath, bool skipCompilation, Func<string, Assembly>? loader = null )`
 is the main entry point; overloads take a raw source string plus *"a minimal list of required reference
 assemblies"* instead. That tolerance is real: whatever you pass is closed transitively by a private
 `Discover` walk over `Assembly.GetReferencedAssemblies`, so naming the direct dependencies is enough.
+A reference that cannot be loaded during this walk is skipped, not fatal: it is reported in
+`GenerateResult.SkippedReferences`.
 `skipCompilation: true` stops after parsing and source generation - only `Sources` is then meaningful,
 and `assemblyPath` may be null.
 
@@ -62,14 +60,13 @@ return result.Assembly;
 ```
 
 `RandomDllPath` is the fixture's own per-run output path and `TestHelper` its monitor, from
-`using static CK.Testing.MonitorTestHelper`; the fixture also picks the loader through an `#if NET461`
-branch, `Assembly.LoadFrom` on the framework side. Note `Modules` being filled immediately before the
+`using static CK.Testing.MonitorTestHelper`. Note `Modules` being filled immediately before the
 call rather than once at construction - the list is cleared by every instance `Generate`, as the
 section below explains.
 
 `LogResult( IActivityMonitor monitor, LogLevel? dumpSources = null )` is the shortcut worth knowing,
-and it is outcome-driven rather than exhaustive: it always reports the load conflicts and closes with
-whether the assembly loaded, but the diagnostics appear **only on failure** - the emit ones, or the
+and it is outcome-driven rather than exhaustive: it always reports the load conflicts and the skipped
+references, and closes with whether the assembly loaded, but the diagnostics appear **only on failure** - the emit ones, or the
 parse ones when compilation was skipped - and the sources only when you pass a level. So a successful
 generation logs three lines and a failing one logs what you need. Reach for it before reading the
 fields one by one.
@@ -141,6 +138,7 @@ that are usually collapsed into one:
 | `Assembly` | the loaded assembly, when a loader was given |
 | `AssemblyLoadError` | the exception from loading it |
 | `LoadConflicts` | the `AssemblyLoadConflict` encountered while resolving dependencies |
+| `SkippedReferences` | the `SkippedAssemblyReference` that could not be loaded while closing the reference set; not an error by itself, but a compilation that needs one fails with a CS0012 diagnostic naming it |
 
 `Success` means *"whether the parsing or full compilation succeeds"*, and is computed differently in
 each of the two constructors:
