@@ -5,7 +5,8 @@ namespace CK.CodeGen;
 
 /// <summary>
 /// A function definer scope is <see cref="INamedScope"/> that can create <see cref="IFunctionScope"/>.
-/// It is itself a <see cref="ICodeWriter"/>: raw code can be appendend to it as needed.
+/// It is not itself a <see cref="ICodeWriter"/> but its specializations (<see cref="ITypeScope"/> and <see cref="IFunctionScope"/>)
+/// are: raw code can be appended to them as needed.
 /// </summary>
 public interface IFunctionDefinerScope : INamedScope
 {

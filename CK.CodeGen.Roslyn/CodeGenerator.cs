@@ -42,8 +42,9 @@ public class CodeGenerator
     public CSharpParseOptions? ParseOptions { get; set; }
 
     /// <summary>
-    /// Gets or sets a <see cref="CSharpCompilationOptions"/>.
-    /// When let to null, defaults to the <see cref="DefaultCompilationOptions"/>.
+    /// Gets or sets the <see cref="CSharpCompilationOptions"/> to use.
+    /// The constructor initializes it to new <see cref="OutputKind.DynamicallyLinkedLibrary"/> options.
+    /// When set to null, the <see cref="DefaultCompilationOptions"/> are used.
     /// </summary>
     public CSharpCompilationOptions? CompilationOptions { get; set; }
 
