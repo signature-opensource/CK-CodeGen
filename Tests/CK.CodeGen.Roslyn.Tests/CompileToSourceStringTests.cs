@@ -31,6 +31,25 @@ public class CompileToSourceStringTests
     }
 
     [Test]
+    public void the_assemblyPath_can_be_null_when_skipping_the_compilation()
+    {
+        var g = new CodeGenerator( CodeWorkspace.Factory );
+        var r = g.Generate( "public class Tester {}", null, [], skipCompilation: true );
+        r.Success.ShouldBeTrue();
+        r.Sources.Count.ShouldBe( 1 );
+    }
+
+    [Test]
+    public void compiling_requires_a_non_empty_assemblyPath()
+    {
+        var g = new CodeGenerator( CodeWorkspace.Factory );
+        Util.Invokable( () => g.Generate( "public class Tester {}", "  ", [], skipCompilation: false ) )
+            .ShouldThrow<ArgumentException>();
+        Util.Invokable( () => g.Generate( CodeWorkspace.Create(), "", skipCompilation: false ) )
+            .ShouldThrow<ArgumentException>();
+    }
+
+    [Test]
     public void simple_generation_or_parsing_code_string()
     {
         {
