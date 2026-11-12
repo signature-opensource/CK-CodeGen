@@ -10,6 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CSemVer" Version="13.0.0" />
-    <PackageReference Include="CK.Core" Version="27.0.0-0.cris-auth" />
+    <PackageReference Include="CK.ActivityMonitor.SimpleSender" Version="28.0.0-0.cris-auth" />
   </ItemGroup>
 </Project>

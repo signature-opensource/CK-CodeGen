@@ -229,9 +229,19 @@ identifier**.
 MSBuild XML. `UnifiedPackageReferences` merges the explicit references with the ones derived from the
 workspace's assembly references, keeping the highest version of each duplicate.
 
+## Xml documentation
+
+[`XmlDocumentationReader`](XmlDocumentation/XmlDocumentationReader.cs) gives a generator the Xml documentation of
+the types it reads, to carry it into what it writes. `GetXmlDocumentation` loads the `.xml` file next to an assembly
+(a missing or invalid file is a warning, and `null`); `GetDocumentationFor` finds the `<member>` element of a type, a
+method, a constructor, a property, a field or an event. The documentation names (`T:`, `M:`, `P:`, `F:`, `E:`) are
+computed by the `GetNameAttributeValueFor` overloads: generic arities, nested types and parameter types included. The
+optional cache (an `IDictionary<object, object?>`) loads each file once, a missing one included.
+
 ## Requires.
 
-- `CK.Core` and `CSemVer` (the latter types the package versions of `PackageReference`).
+- `CK.ActivityMonitor.SimpleSender` (the warnings of the `XmlDocumentationReader`) and `CSemVer` (the latter types the
+  package versions of `PackageReference`).
 
 Nothing else. This package models source code and hands it back as text: it carries no compiler, and a
 consumer that only needs to *generate* code never pulls one in.
