@@ -37,7 +37,7 @@ public class DocumentationTextBuilderTests
             A second paragraph.
 
             Some remarks.
-            """ );
+            """.ReplaceLineEndings( "\n" ) );
     }
 
     [Test]

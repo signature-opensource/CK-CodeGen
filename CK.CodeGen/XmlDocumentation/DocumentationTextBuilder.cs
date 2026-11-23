@@ -225,11 +225,39 @@ public sealed partial class DocumentationTextBuilder
                 }
                 else if( n is XText t )
                 {
-                    AppendText( t.Value, trimFirstLine, true, startNewLine, false );
+                    // The line structure of the source is kept between the nodes (words of two lines are never glued): a
+                    // text that starts with a line break after another node starts a new line, a text that ends with one
+                    // before another node ends its line. The line breaks after the opening tag and before the closing
+                    // one are the layout of the Xml.
+                    var text = t.Value;
+                    bool newLine = startNewLine || (HasContentNode( n, before: true ) && StartsWithLineBreak( text ));
+                    bool endLine = HasContentNode( n, before: false ) && EndsWithLineBreak( text );
+                    AppendText( text, trimFirstLine, true, newLine, endLine );
                 }
             }
         }
         return this;
+
+        static bool HasContentNode( XNode n, bool before )
+        {
+            for( var x = before ? n.PreviousNode : n.NextNode; x != null; x = before ? x.PreviousNode : x.NextNode )
+            {
+                if( x is XElement || x is XText ) return true;
+            }
+            return false;
+        }
+
+        static bool StartsWithLineBreak( string text )
+        {
+            var head = text.AsSpan().TrimStart( " \t" );
+            return head.Length > 0 && (head[0] == '\r' || head[0] == '\n');
+        }
+
+        static bool EndsWithLineBreak( string text )
+        {
+            var tail = text.AsSpan().TrimEnd( " \t" );
+            return tail.Length > 0 && (tail[^1] == '\r' || tail[^1] == '\n');
+        }
     }
 
     void AppendCodeRef( XElement e, XElement c, CodeRefHandler codeRef )
@@ -315,12 +343,6 @@ public sealed partial class DocumentationTextBuilder
             var l = text.Split( new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries );
             if( l.Length > 0 )
             {
-                // The line structure of the source is kept (words of two lines are never glued): a text that starts with
-                // a line break (after white spaces) starts a new line, a text that ends with one ends its line.
-                var head = text.AsSpan().TrimStart( " \t" );
-                if( head.Length > 0 && (head[0] == '\r' || head[0] == '\n') ) startNewLine = true;
-                var tail = text.AsSpan().TrimEnd( " \t" );
-                if( tail.Length > 0 && (tail[^1] == '\r' || tail[^1] == '\n') ) endWithNewline = true;
                 if( startNewLine )
                 {
                     int p = ComputeSpacePrefix( l, false );
