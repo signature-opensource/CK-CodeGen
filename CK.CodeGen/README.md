@@ -238,6 +238,16 @@ method, a constructor, a property, a field or an event. The documentation names 
 computed by the `GetNameAttributeValueFor` overloads: generic arities, nested types and parameter types included. The
 optional cache (an `IDictionary<object, object?>`) loads each file once, a missing one included.
 
+[`DocumentationTextBuilder`](XmlDocumentation/DocumentationTextBuilder.cs) turns these elements into Markdown text:
+`AppendSummaryAndRemarks` merges the `<summary>`/`<value>` and the `<remarks>` of members (identical blocks once),
+`AppendLinesFromXElement` converts one element (`<c>` and `<code>` become ` and ``` markers, `<para>` a blank line,
+`<paramref>` its name, the other elements are transparent). The line structure of the source is kept, the common white
+space prefix of the lines is removed and consecutive empty lines are collapsed. A code reference (`<see>`, `<seealso>`)
+goes through a `DocumentationTextBuilder.CodeRefHandler` (`DocumentationTextBuilder.TextOnly` by default: the text of the
+reference, or the leaf of the type name and the member); a reference of an unsupported kind keeps its text, unless
+`ThrowOnUnsupportedCodeRef` is set. `RemoveGetOrSetPrefix` removes the "Gets or sets " prefix of the fragments while it
+is active, and a header and a line prefix (`new DocumentationTextBuilder( "/**", " * " )`) shape a source code comment.
+
 ## Requires.
 
 - `CK.ActivityMonitor.SimpleSender` (the warnings of the `XmlDocumentationReader`) and `CSemVer` (the latter types the
